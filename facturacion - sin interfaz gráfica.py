@@ -10,9 +10,6 @@ import pickle
 import smtplib
 import locale
 import shutil
-import tkinter as tk
-import threading
-from tkinter import scrolledtext
 from datetime import datetime
 from openpyxl import load_workbook
 from email.mime.multipart import MIMEMultipart
@@ -20,11 +17,7 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-# Rutas de archivos y variables necesarias
-user_input = None
-lock = threading.Lock()
-global t
-t = None
+# Rutas de archivos y directorios
 locale.setlocale(locale.LC_TIME, 'es_ES')
 current_dir = os.getcwd()
 csv_oc_pendientes = os.path.join(current_dir, 'OCs_Pendientes.csv')
@@ -156,31 +149,14 @@ def normalizar_ruc(ruc, longitud_estandar=13):
 def extraer_informacion_de_archivo(ruta_archivo):
 
     # Verificar si existe un archivo PDF con el mismo nombre que el archivo XML en la misma carpeta
-    global user_input  # Declarar user_input como global
     ruta_pdf = os.path.splitext(ruta_archivo)[0] + '.pdf'
-    nombre_carpeta = os.path.basename(os.path.dirname(ruta_archivo))
-
-    # Iniciar un bucle que continúa hasta que el archivo PDF exista
-    while not os.path.exists(ruta_pdf):
-        print(f"Por favor verifique la OC en {nombre_carpeta}. Una vez solventado ingrese OK para continuar.")
-        while True:
-            with lock:
-                if user_input is not None:
-                    entrada = user_input.strip().lower()
-                    print(f"Entrada recibida: {user_input}")  # Mostrar la entrada recibida
-                    user_input = None  # Restablecer user_input para evitar repeticiones
-                    
-                    if entrada == "ok":
-                        if os.path.exists(ruta_pdf):
-                            print("Archivo PDF encontrado. Continuando con el proceso.")
-                            break  # Salir del bucle si el archivo PDF ya existe
-                        else:
-                            print("El archivo PDF aún no existe. Por favor, verifique y vuelva a intentarlo.")
-                    elif entrada == "":
-                        print("No se detectó ninguna entrada. Por favor, ingrese OK cuando esté listo.")
-                    else:
-                        print("Entrada no reconocida. Ingrese OK para confirmar que el archivo PDF está listo.")
-            time.sleep(1)  # Pequeña pausa para evitar saturación de CPU
+    if not os.path.exists(ruta_pdf):
+        nombre_carpeta = os.path.basename(os.path.dirname(ruta_archivo))
+        print(f"Por favor verifique la OC {nombre_carpeta}. Una vez solventado ingrese OK para continuar.")
+        respuesta = input()
+        if respuesta.lower() != "ok" or not os.path.exists(ruta_pdf):  # Verifica nuevamente si el archivo PDF existe
+            print("El archivo PDF aún no existe. Por favor, verifique y vuelva a intentarlo.")
+            return
 
     try:
         with open(ruta_archivo, 'r', encoding='utf-8') as archivo:
@@ -337,96 +313,22 @@ def cargar_y_mapear_terceros(ruta_terceros_csv):
     return mapeo_terceros
 
 def main():
-    # Programa las otras tareas para ejecución periódica
-    tarea1 = schedule.every(10).seconds.do(registrar_carpetas_vacias)
-    tarea2 = schedule.every(10).seconds.do(limpiar_registros_carpetas)
-    tarea3 = schedule.every(10).seconds.do(actualizar_tabla_excel_y_limpieza, ruta_excel_salida)
-    tarea4 = schedule.every(10).seconds.do(guardar_backup_si_ha_cambiado)
+    # Ejecuta la función para cargar_y_mapear_terceros
+    cargar_y_mapear_terceros(ruta_terceros_csv)
 
+    # Programa las otras tareas para ejecución periódica
+    schedule.every(10).seconds.do(registrar_carpetas_vacias)
+    schedule.every(10).seconds.do(limpiar_registros_carpetas)
+    schedule.every(10).seconds.do(actualizar_tabla_excel_y_limpieza, ruta_excel_salida)
+    schedule.every(10).seconds.do(guardar_backup_si_ha_cambiado)
+
+    # Bucle infinito para mantener en ejecución las tareas programadas
     try:
         while True:
-            if stop_thread:  # Verifica si se ha señalado la detención
-                print("Deteniendo tareas programadas...")
-                # Cancela todas las tareas programadas
-                schedule.cancel_job(tarea1)
-                schedule.cancel_job(tarea2)
-                schedule.cancel_job(tarea3)
-                schedule.cancel_job(tarea4)
-                break  # Sale del bucle
             schedule.run_pending()  # Ejecuta las tareas pendientes según su programación.
             time.sleep(1)  # Espera 1 segundo antes de la próxima verificación de tareas pendientes.
-    except Exception as e:
-        print(f"Error durante la ejecución de tareas: {e}")
-    finally:
-        print("Finalizando el programa principal.")
-
-def iniciar_tareas():
-    global t, stop_thread
-    print("Iniciando gestión de facturas, por favor espere.")
-    stop_thread = False
-    t = threading.Thread(target=ejecutar_tareas)
-    t.start()
-
-def check_thread():
-    global t
-    if t.is_alive():
-        # Si el hilo todavía está corriendo, revisa de nuevo en 100 ms
-        window.after(100, check_thread)
-    else:
-        # Cuando el hilo termina, actualiza la interfaz como necesites
-        print("Todas las tareas han sido detenidas.")
-        stop_button.config(relief=tk.RAISED)  # Cambia el relieve del botón si está presionado
-
-def detener_tareas():
-    global t, stop_thread
-    stop_thread = True
-    print("Deteniendo todas las tareas, por favor espere...")
-    stop_button.config(relief=tk.SUNKEN)  # Hace que el botón parezca presionado
-    check_thread()  # Comienza a verificar si el hilo ha terminado
-
-def ejecutar_tareas():
-    try:
-        while not stop_thread:
-            main()
-            time.sleep(1)
-            pass
     except KeyboardInterrupt:
-        print("Tareas detenidas.")
+        print("Programa terminado por el usuario.")  # Mensaje de salida al detener el programa manualmente.
 
-def enviar_input():
-    global user_input
-    entrada = entry_box.get()
-    entry_box.delete(0, tk.END)
-    with lock:
-        user_input = entrada
-    print(f"Entrada recibida: {entrada}")
-
-# Configuración de la ventana principal
-window = tk.Tk()
-window.title("Gestión de Facturas GPF")
-
-# Área de texto para salida
-text_area = scrolledtext.ScrolledText(window, wrap=tk.WORD, width=40, height=10)
-text_area.grid(column=0, row=0, columnspan=3, pady=10, padx=10)
-
-# Redefinir la función print para que muestre en el área de texto
-def print(*args, **kwargs):
-    text_area.insert(tk.END, ' '.join(map(str, args)) + '\n')
-    text_area.see(tk.END)
-
-# Entrada de texto
-entry_box = tk.Entry(window, width=25)
-entry_box.grid(column=0, row=1, pady=10)
-
-# Botón para enviar input
-input_button = tk.Button(window, text="Enviar", command=enviar_input)
-input_button.grid(column=1, row=1)
-
-# Botones de control
-start_button = tk.Button(window, text="Iniciar", command=iniciar_tareas)
-start_button.grid(column=0, row=2, pady=10)
-
-stop_button = tk.Button(window, text="Detener", command=detener_tareas)
-stop_button.grid(column=1, row=2)
-
-window.mainloop()
+# Ejecución codigo
+main()
