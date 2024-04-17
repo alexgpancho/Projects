@@ -106,12 +106,11 @@ def extraer_informacion_de_archivo(ruta_archivo):
     # Verificar si existe un archivo PDF con el mismo nombre que el archivo XML en la misma carpeta
     ruta_pdf = os.path.splitext(ruta_archivo)[0] + '.pdf'
     if not os.path.exists(ruta_pdf):
-        # Extraer el nombre de la carpeta contenedora del archivo
         nombre_carpeta = os.path.basename(os.path.dirname(ruta_archivo))
-        # Pausar la ejecución e imprimir el mensaje solicitando revisión
         print(f"Por favor verifique la OC {nombre_carpeta}. Una vez solventado ingrese OK para continuar.")
         respuesta = input()
-        if respuesta.lower() != "ok":
+        if respuesta.lower() != "ok" or not os.path.exists(ruta_pdf):  # Verifica nuevamente si el archivo PDF existe
+            print("El archivo PDF aún no existe. Por favor, verifique y vuelva a intentarlo.")
             return
 
     try:
@@ -282,15 +281,6 @@ def crear_excel_con_tabla(ruta_entrada, ruta_salida):
     print("Archivo Excel Actualizado")
 
 def cargar_y_mapear_terceros(ruta_terceros_csv):
-    """
-    Carga un DataFrame de un archivo CSV, normaliza los RUC y crea un diccionario mapeando RUC a TERCERO.
-
-    Parámetros:
-    - ruta_terceros_csv: La ruta al archivo CSV que contiene la información de terceros.
-
-    Retorna:
-    - mapeo_terceros: Un diccionario donde las claves son los RUC normalizados y los valores son los TERCERO correspondientes.
-    """
     # Intenta leer el archivo CSV con diferentes codecs
     try:
         terceros_df = pd.read_csv(ruta_terceros_csv, encoding='utf-8')
@@ -305,31 +295,7 @@ def cargar_y_mapear_terceros(ruta_terceros_csv):
 
     return mapeo_terceros
 
-
 def main():
-    """
-    Función principal que coordina la ejecución de tareas relacionadas con el procesamiento de facturas,
-    incluyendo el mapeo de terceros, el registro y limpieza de carpetas vacías, la actualización de una tabla
-    Excel con información de facturas y la creación de un archivo Excel formateado como tabla.
-
-    Funcionamiento:
-        - Inicialmente, ejecuta la función 'cargar_y_mapear_terceros' para preparar el mapeo de terceros
-            a partir de un archivo CSV.
-        - Programa tareas recurrentes para registrar carpetas vacías, limpiar registros de carpetas, actualizar
-            la tabla Excel con información extraída de archivos XML, y finalmente, crear un archivo Excel con los
-            datos formateados como tabla.
-        - Estas tareas se ejecutan en un bucle infinito, con cada tarea programada para ejecutarse cada 10 segundos.
-        - La ejecución del bucle se puede interrumpir manualmente por el usuario mediante una interrupción de teclado (Ctrl+C),
-            lo cual detiene el programa de manera segura.
-
-    Notas:
-        - La función depende de las variables globales 'ruta_terceros_csv' y 'ruta_excel_salida', las cuales deben estar
-            correctamente definidas y apuntar a las rutas de los archivos relevantes.
-        - Utiliza la biblioteca 'schedule' para programar la ejecución periódica de las tareas. Esta biblioteca debe
-            estar instalada en el entorno de ejecución.
-        - La interacción del usuario mediante una interrupción de teclado es capturada para terminar el programa,
-            lo que proporciona una forma segura de detener la ejecución.
-    """
     # Ejecuta la función para cargar_y_mapear_terceros
     cargar_y_mapear_terceros(ruta_terceros_csv)
 

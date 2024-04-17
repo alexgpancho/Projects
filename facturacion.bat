@@ -1,4 +1,4 @@
-
+@echo off
 REM Activa el entorno de Conda
 call C:\Users\AAGUANANGAP\miniconda3\Scripts\activate.bat alexg
 
