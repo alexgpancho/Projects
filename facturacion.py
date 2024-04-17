@@ -250,34 +250,7 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
         pickle.dump(facturas_procesadas, f)
     df_oc_pendientes.to_csv(csv_oc_pendientes, index=False)
 
-def crear_excel_con_tabla(ruta_entrada, ruta_salida):
 
-    # Cargar el libro existente
-    book = load_workbook(ruta_entrada)
-    
-    # Crear un objeto ExcelWriter con el motor xlsxwriter
-    with pd.ExcelWriter(ruta_salida, engine='xlsxwriter') as writer:
-        for sheet_name in book.sheetnames:
-            # Leer la hoja específica en un DataFrame
-            df = pd.read_excel(ruta_entrada, sheet_name=sheet_name)
-            
-            # Guardar el DataFrame en el nuevo libro Excel
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-            
-            # Trabajar con el libro y la hoja dentro del writer
-            workbook = writer.book
-            worksheet = writer.sheets[sheet_name]
-
-            # Añadir formato de tabla
-            last_row = len(df)
-            last_col = len(df.columns) - 1
-            
-            # Añadir tabla con opciones de configuración
-            worksheet.add_table(0, 0, last_row, last_col, {
-                'columns': [{'header': col} for col in df.columns],
-                'autofilter': False,  # Se puede configurar para añadir autofiltro
-                'style': 'Table Style Medium 9'  # Estilo de tabla opcional
-            })
     print("Archivo Excel Actualizado")
 
 def cargar_y_mapear_terceros(ruta_terceros_csv):
@@ -303,8 +276,6 @@ def main():
     schedule.every(10).seconds.do(registrar_carpetas_vacias)
     schedule.every(10).seconds.do(limpiar_registros_carpetas)
     schedule.every(10).seconds.do(actualizar_tabla_excel_y_limpieza, ruta_excel_salida)
-    schedule.every(10).seconds.do(crear_excel_con_tabla, ruta_excel_salida, os.path.join(current_dir, 'salida_tabla.xlsx'))
-
 
     # Bucle infinito para mantener en ejecución las tareas programadas
     try:
