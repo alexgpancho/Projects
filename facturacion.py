@@ -9,6 +9,8 @@ import time
 import pickle
 import smtplib
 import locale
+import shutil
+from datetime import datetime
 from openpyxl import load_workbook
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -23,13 +25,56 @@ pickle_file = os.path.join(current_dir, 'OCS\\facturas_procesadas.pickle')
 ruta_excel_salida = os.path.join(current_dir, 'salida.xlsx')
 ruta_terceros_csv = os.path.join(current_dir, 'terceros.csv')
 
-#Lectura de claves:
+# Funciones principales
 def obtener_clave():
     with open('outlookKey', 'r') as file:  # Abre el archivo 'outlookKey' en modo lectura.
         outlookKey = file.read().strip()  # Lee la clave del archivo, eliminando espacios en blanco y saltos de línea.
     return outlookKey  # Retorna la clave leída.
 
-# Funciones principales
+def ha_cambiado():
+    carpeta_backup = os.path.join(current_dir, 'backups')
+    if not os.path.exists(carpeta_backup):
+        os.makedirs(carpeta_backup, exist_ok=True)
+        return True  # Si no existe la carpeta, asumimos que necesitamos hacer un backup
+
+    backups_pickles = sorted([f for f in os.listdir(carpeta_backup) if f.endswith('.pickle')])
+    if not backups_pickles:
+        return True  # Si no hay backups, asumimos que necesitamos hacer uno
+
+    ultimo_backup = os.path.join(carpeta_backup, backups_pickles[-1])
+    try:
+        with open(pickle_file, 'rb') as f_actual, open(ultimo_backup, 'rb') as f_ultimo:
+            datos_actuales = pickle.load(f_actual)
+            datos_ultimo_backup = pickle.load(f_ultimo)
+    except FileNotFoundError:
+        return True  # Si alguno de los archivos no existe, asumimos que hay un cambio
+
+    return datos_actuales != datos_ultimo_backup
+
+def guardar_backup_si_ha_cambiado():
+    if ha_cambiado():  # Llamada sin argumentos
+        fecha_actual = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        carpeta_backup = os.path.join(current_dir, 'backups')
+        os.makedirs(carpeta_backup, exist_ok=True)
+        
+        # Definir las rutas de los archivos de backup
+        archivo_backup_pickle = os.path.join(carpeta_backup, f'facturas_procesadas_{fecha_actual}.pickle')
+        archivo_backup_excel = os.path.join(carpeta_backup, f'salida_{fecha_actual}.xlsx')
+        archivo_backup_csv_oc_pendientes = os.path.join(carpeta_backup, f'OCs_Pendientes_{fecha_actual}.csv')
+        
+        # Copiar los archivos a la carpeta de backups
+        shutil.copy(pickle_file, archivo_backup_pickle)
+        shutil.copy(ruta_excel_salida, archivo_backup_excel)
+        if os.path.exists(csv_oc_pendientes):
+            shutil.copy(csv_oc_pendientes, archivo_backup_csv_oc_pendientes)
+        
+        # Mantenimiento de la cantidad de backups
+        backups = sorted([f for f in os.listdir(carpeta_backup) if f.endswith('.pickle') or f.endswith('.xlsx') or f.endswith('.csv')], reverse=True)
+        while len(backups) > 300:  # Asumiendo 100 versiones de cada tipo de archivo
+            os.remove(os.path.join(carpeta_backup, backups.pop()))
+
+        print("Backup realizado con éxito.")
+
 def enviar_correo(asunto, cuerpo, destinatario, adjuntos=[]):
     emisor = 'alexgpancho@hotmail.com'  # Dirección de correo electrónico del emisor.
     contraseña = obtener_clave()  # Obtiene la contraseña del archivo 'outlookKey'.
@@ -250,7 +295,6 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
         pickle.dump(facturas_procesadas, f)
     df_oc_pendientes.to_csv(csv_oc_pendientes, index=False)
 
-
     print("Archivo Excel Actualizado")
 
 def cargar_y_mapear_terceros(ruta_terceros_csv):
@@ -276,6 +320,7 @@ def main():
     schedule.every(10).seconds.do(registrar_carpetas_vacias)
     schedule.every(10).seconds.do(limpiar_registros_carpetas)
     schedule.every(10).seconds.do(actualizar_tabla_excel_y_limpieza, ruta_excel_salida)
+    schedule.every(10).seconds.do(guardar_backup_si_ha_cambiado)
 
     # Bucle infinito para mantener en ejecución las tareas programadas
     try:
