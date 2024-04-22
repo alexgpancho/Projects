@@ -29,15 +29,10 @@ locale.setlocale(locale.LC_TIME, 'es_ES')
 current_dir = os.getcwd()
 csv_oc_pendientes = os.path.join(current_dir, 'OCs_Pendientes.csv')
 pickle_file = os.path.join(current_dir, 'OCS\\facturas_procesadas.pickle')
-ruta_excel_salida = os.path.join(current_dir, 'salida.xlsx')
+ruta_excel_salida = os.path.join(current_dir, 'Facturas Sierra.xlsx')
 ruta_terceros_csv = os.path.join(current_dir, 'terceros.csv')
 
 # Funciones principales
-def obtener_clave():
-    with open('outlookKey', 'r') as file:  # Abre el archivo 'outlookKey' en modo lectura.
-        outlookKey = file.read().strip()  # Lee la clave del archivo, eliminando espacios en blanco y saltos de línea.
-    return outlookKey  # Retorna la clave leída.
-
 def ha_cambiado():
     carpeta_backup = os.path.join(current_dir, 'backups')
     if not os.path.exists(carpeta_backup):
@@ -83,8 +78,8 @@ def guardar_backup_si_ha_cambiado():
         print("Backup realizado con éxito.")
 
 def enviar_correo(asunto, cuerpo, destinatario, adjuntos=[]):
-    emisor = 'alexgpancho@hotmail.com'  # Dirección de correo electrónico del emisor.
-    contraseña = obtener_clave()  # Obtiene la contraseña del archivo 'outlookKey'.
+    emisor = 'facturas_gpf_sierra@outlook.com'  # Dirección de correo electrónico del emisor.
+    contraseña = 'cnvzpbgggmtdqiry' #Clave de API correo
 
     mensaje = MIMEMultipart()  # Crea un objeto MIMEMultipart para el mensaje.
     mensaje['From'] = emisor  # Establece el emisor.
@@ -285,12 +280,12 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
                 facturas_procesadas[oc] = True
                 df_oc_pendientes = df_oc_pendientes[df_oc_pendientes['OC'] != oc]
 
-            asunto = f"Factura {factura}"
-            cuerpo = f"Estimados, saludos adjunto factura nro {factura} correspondiente a la OC {oc}"
-            destinatario = 'aaguanangap@corporaciongpf.com'
+            asunto = f"FACTURA ARRIENDO {informacion['compania']} No {factura}"
+            cuerpo = f"Buen día estimados, \n Por favor su gentil ayuda con el registro de la factura \n Factura No: {factura} \n OC: {oc}"
+            destinatario = 'g_gyerecepcionfacturasservicios@corporaciongpf.com'
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
-            #enviar_correo(asunto, cuerpo, destinatario, [ruta_xml, ruta_pdf]) # ** OJO **
+            enviar_correo(asunto, cuerpo, destinatario, [ruta_xml, ruta_pdf])
             print(f"Enviando correo OC {oc}")
 
 
