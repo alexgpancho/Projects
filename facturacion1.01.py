@@ -78,8 +78,8 @@ def guardar_backup_si_ha_cambiado():
         print("Backup realizado con éxito.")
 
 def enviar_correo(asunto, cuerpo, destinatario, adjuntos=[]):
-    emisor = 'facturas_gpf_sierra@outlook.com'  # Dirección de correo electrónico del emisor.
-    contraseña = 'cnvzpbgggmtdqiry' #Clave de API correo
+    emisor = 'facturas_gpf_costa@outlook.com'  # Dirección de correo electrónico del emisor.
+    contraseña = 'ClaveAPI' #Clave de API correo
 
     mensaje = MIMEMultipart()  # Crea un objeto MIMEMultipart para el mensaje.
     mensaje['From'] = emisor  # Establece el emisor.
@@ -135,7 +135,7 @@ def actualizar_csv_oc_pendientes(ocs):
 def limpiar_registros_carpetas():
     registros = cargar_o_inicializar_registros()  # Carga los registros actuales.
     carpetas_a_eliminar = [carpeta for carpeta in registros["carpetas_vacias"] if any(f.endswith('.xml') for f in os.listdir(os.path.join(current_dir, 'OCS', carpeta)))] #Identifica carpetas a limpiar
-                            
+
     for carpeta in carpetas_a_eliminar:  # Elimina las entradas de carpetas que ya no están vacías.
         del registros["carpetas_vacias"][carpeta]
 
@@ -285,7 +285,7 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
             destinatario = 'g_gyerecepcionfacturasservicios@corporaciongpf.com'
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
-            #enviar_correo(asunto, cuerpo, destinatario, [ruta_xml, ruta_pdf])
+            enviar_correo(asunto, cuerpo, destinatario, [ruta_xml, ruta_pdf])
             print(f"Enviando correo OC {oc}")
 
 
