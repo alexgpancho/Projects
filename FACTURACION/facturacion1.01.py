@@ -1,3 +1,5 @@
+# pip install pyinstaller schedule xlsxwriter pandas openpyxl cryptography smartsheet-python-sdk
+# dependencias
 # Importar librerías
 import re
 import glob
@@ -19,6 +21,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+from security import security
 
 # Rutas de archivos y variables necesarias
 user_input = None
@@ -72,14 +75,15 @@ def guardar_backup_si_ha_cambiado():
         
         # Mantenimiento de la cantidad de backups
         backups = sorted([f for f in os.listdir(carpeta_backup) if f.endswith('.pickle') or f.endswith('.xlsx') or f.endswith('.csv')], reverse=True)
-        while len(backups) > 300:  # Asumiendo 100 versiones de cada tipo de archivo
+        while len(backups) > 20:  # Asumiendo 20 versiones de cada tipo de archivo
             os.remove(os.path.join(carpeta_backup, backups.pop()))
 
         print("Backup realizado con éxito.")
 
 def enviar_correo(asunto, cuerpo, destinatario, adjuntos=[]):
-    emisor = 'facturas_gpf_costa@outlook.com'  # Dirección de correo electrónico del emisor.
-    contraseña = 'ClaveAPI' #Clave de API correo
+    #emisor = 'facturas_gpf_costa@outlook.com'  # Dirección de correo electrónico Costa
+    emisor = 'facturas_gpf_sierra@outlook.com' # Dirección de correo electrónico Sierra
+    contraseña = 'cnvzpbgggmtdqiry' #Clave de API correo Sierra
 
     mensaje = MIMEMultipart()  # Crea un objeto MIMEMultipart para el mensaje.
     mensaje['From'] = emisor  # Establece el emisor.
@@ -282,7 +286,8 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
 
             asunto = f"FACTURA ARRIENDO {informacion['compania']} No {factura}"
             cuerpo = f"Buen día estimados, \n Por favor su gentil ayuda con el registro de la factura \n Factura No: {factura} \n OC: {oc}"
-            destinatario = 'g_gyerecepcionfacturasservicios@corporaciongpf.com'
+            #destinatario = 'g_gyerecepcionfacturasservicios@corporaciongpf.com'
+            destinatario = 'aaguanangap@corporaciongpf.com' #Para pruebas
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
             enviar_correo(asunto, cuerpo, destinatario, [ruta_xml, ruta_pdf])
@@ -396,7 +401,17 @@ def enviar_input():
     entry_box.delete(0, tk.END)
     with lock:
         user_input = entrada
-    print(f"Entrada recibida: {entrada}")
+    print(f"Entrada recibida")
+    if validar_clave(entrada):
+        print("Clave válida. Puede iniciar las tareas.")
+        start_button.config(state=tk.NORMAL)
+    else:
+        print("Clave inválida. Inténtelo de nuevo.")
+        start_button.config(state=tk.DISABLED)
+
+def validar_clave(clave_ingresada):
+    datos = security()
+    return clave_ingresada == datos['clave']
 
 # Configuración de la ventana principal
 window = tk.Tk()
@@ -411,6 +426,9 @@ def print(*args, **kwargs):
     text_area.insert(tk.END, ' '.join(map(str, args)) + '\n')
     text_area.see(tk.END)
 
+# Mensaje inicial en la caja de texto
+print("Bienvenido. Por favor, ingrese la clave para iniciar.")
+
 # Entrada de texto
 entry_box = tk.Entry(window, width=25)
 entry_box.grid(column=0, row=1, pady=10)
@@ -422,6 +440,7 @@ input_button.grid(column=1, row=1)
 # Botones de control
 start_button = tk.Button(window, text="Iniciar", command=iniciar_tareas)
 start_button.grid(column=0, row=2, pady=10)
+start_button.config(state=tk.DISABLED)  # Desactivar el botón de inicio inicialmente
 
 stop_button = tk.Button(window, text="Detener", command=detener_tareas)
 stop_button.grid(column=1, row=2)
