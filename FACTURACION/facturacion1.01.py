@@ -9,7 +9,6 @@ import pandas as pd
 import schedule
 import time
 import pickle
-import smtplib
 import locale
 import shutil
 import tkinter as tk
@@ -17,11 +16,9 @@ import threading
 from tkinter import scrolledtext
 from datetime import datetime
 from openpyxl import load_workbook
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
+#Librerías locales
 from security import security
+from manejo_correo import enviar_correo, gestionar_correos_enviados
 
 # Rutas de archivos y variables necesarias
 user_input = None
@@ -80,40 +77,17 @@ def guardar_backup_si_ha_cambiado():
 
         print("Backup realizado con éxito.")
 
-def enviar_correo(asunto, cuerpo, destinatario, adjuntos=[]):
-    #emisor = 'facturas_gpf_costa@outlook.com'  # Dirección de correo electrónico Costa
-    emisor = 'facturas_gpf_sierra@outlook.com' # Dirección de correo electrónico Sierra
-    contraseña = 'cnvzpbgggmtdqiry' #Clave de API correo Sierra
-
-    mensaje = MIMEMultipart()  # Crea un objeto MIMEMultipart para el mensaje.
-    mensaje['From'] = emisor  # Establece el emisor.
-    mensaje['To'] = destinatario  # Establece el destinatario.
-    mensaje['Subject'] = asunto  # Establece el asunto del correo.
-
-    mensaje.attach(MIMEText(cuerpo, 'plain'))  # Adjunta el cuerpo del mensaje como texto plano.
-
-    for archivo in adjuntos:  # Procesa cada archivo adjunto.
-        parte = MIMEBase('application', 'octet-stream')  # Crea un objeto MIMEBase para el archivo.
-        with open(archivo, 'rb') as file:  # Abre el archivo en modo binario.
-            parte.set_payload(file.read())  # Lee y adjunta el contenido del archivo.
-        encoders.encode_base64(parte)  # Codifica el contenido en base64.
-        parte.add_header('Content-Disposition', f"attachment; filename= {os.path.basename(archivo)}")  # Añade el nombre del archivo.
-        mensaje.attach(parte)  # Adjunta el archivo al mensaje.
-
-    #server = smtplib.SMTP('smtp.gmail.com', 587) # Conecta al servidor de Gmail usando SMTP en el puerto 587.
-    server = smtplib.SMTP('smtp.office365.com', 587) ## Conecta al servidor de Outlook usando SMTP en el puerto 587.
-    server.starttls()  # Inicia TLS para la seguridad de la conexión.
-    server.login(emisor, contraseña)  # Inicia sesión con las credenciales del emisor.
-    text = mensaje.as_string()  # Convierte el mensaje a una cadena de texto.
-    server.sendmail(emisor, destinatario, text)  # Envía el correo.
-    server.quit()  # Cierra la conexión con el servidor.
-
 def cargar_o_inicializar_registros():
+    if not os.path.exists(pickle_file):
+        with open(pickle_file, 'wb') as f:  # Crea un archivo pickle vacío si no existe.
+            pickle.dump({"facturas_procesadas": {}, "carpetas_vacias": {}}, f)
+    
     try:
         with open(pickle_file, 'rb') as f:  # Intenta abrir el archivo pickle en modo lectura binaria.
             return pickle.load(f)  # Retorna el diccionario cargado desde el archivo pickle.
     except (FileNotFoundError, EOFError):  # Captura errores si el archivo no existe o está vacío.
         return {"facturas_procesadas": {}, "carpetas_vacias": {}}  # Retorna un nuevo diccionario con estructuras iniciales vacías.
+
 
 def registrar_carpetas_vacias():
     registros = cargar_o_inicializar_registros()  # Carga o inicializa los registros.
@@ -124,8 +98,9 @@ def registrar_carpetas_vacias():
             oc = os.path.basename(carpeta.rstrip('\\'))  # Extrae el nombre de la OC basado en el nombre de la carpeta.
             registros["carpetas_vacias"][oc] = True  # Marca la OC como carpeta vacía en los registros.
 
-    with open(pickle_file, 'wb') as f:  # Abre el archivo pickle en modo escritura binaria.
-        pickle.dump(registros, f)  # Guarda los registros actualizados en el archivo pickle.
+    if not os.path.exists(pickle_file):
+        with open(pickle_file, 'wb') as f:  # Crea un archivo pickle vacío si no existe.
+            pickle.dump({"facturas_procesadas": {}, "carpetas_vacias": {}}, f)
 
     # Actualiza el archivo CSV con las OCs pendientes basado en las carpetas vacías registradas.
     actualizar_csv_oc_pendientes(registros["carpetas_vacias"].keys())
@@ -288,11 +263,10 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
             cuerpo = f"Buen día estimados, \n Por favor su gentil ayuda con el registro de la factura \n Factura No: {factura} \n OC: {oc}"
             #destinatario = 'g_gyerecepcionfacturasservicios@corporaciongpf.com'
             destinatario = 'aaguanangap@corporaciongpf.com' #Para pruebas
+            cc = "desarrolloinmobiliario@fybeca.com"
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
-            enviar_correo(asunto, cuerpo, destinatario, [ruta_xml, ruta_pdf])
-            print(f"Enviando correo OC {oc}")
-
+            enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], print)
 
     if not dataframe_total.empty:
         dataframe_total['Fecha_convertida'] = pd.to_datetime(dataframe_total['Fecha'], format='%d/%m/%Y', errors='coerce')
@@ -337,11 +311,12 @@ def cargar_y_mapear_terceros(ruta_terceros_csv):
     return mapeo_terceros
 
 def main():
+
     # Programa las otras tareas para ejecución periódica
-    tarea1 = schedule.every(10).seconds.do(registrar_carpetas_vacias)
-    tarea2 = schedule.every(10).seconds.do(limpiar_registros_carpetas)
-    tarea3 = schedule.every(10).seconds.do(actualizar_tabla_excel_y_limpieza, ruta_excel_salida)
-    tarea4 = schedule.every(10).seconds.do(guardar_backup_si_ha_cambiado)
+    tarea1 = schedule.every(1).second.do(registrar_carpetas_vacias)
+    tarea2 = schedule.every(1).second.do(limpiar_registros_carpetas)
+    tarea3 = schedule.every(1).second.do(actualizar_tabla_excel_y_limpieza, ruta_excel_salida)
+    tarea4 = schedule.every(1).second.do(guardar_backup_si_ha_cambiado)
 
     try:
         while True:
