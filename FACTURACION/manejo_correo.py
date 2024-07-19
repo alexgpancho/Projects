@@ -52,42 +52,7 @@ def enviar_correo(asunto, cuerpo, destinatario, cc, adjuntos=[], print_func=prin
     if not enviado:
         print_func(f"Fallo al enviar el correo a {destinatarios} después de {max_reintentos} intentos.")
 
-
-def gestionar_correos_enviados(imap_server='imap.outlook.com', email_user='emisor', email_pass='contraseña', print_func=print):
-    def guardar_en_archivo(linea, nombre_archivo='correos_enviados.txt'):
-        try:
-            with open(nombre_archivo, 'a') as archivo:
-                archivo.write(linea + '\n')
-        except Exception as e:
-            print_func(f"Error al guardar en el archivo: {e}")
-
-    try:
-        mail = imaplib.IMAP4_SSL(imap_server)
-        mail.login(email_user, email_pass)
-        mail.select("/Sent")  # Carpeta de correos enviados en Outlook
-
-        result, data = mail.search(None, 'ALL')
-        correo_ids = data[0].split()
-
-        for correo_id in correo_ids:
-            result, mensaje_data = mail.fetch(correo_id, '(RFC822)')
-            mensaje = email.message_from_bytes(mensaje_data[0][1])
-            asunto = mensaje['subject']
-            mensaje_guardar = f"Título del correo enviado: {asunto}"
-            print_func(mensaje_guardar)
-            guardar_en_archivo(mensaje_guardar)
-
-            # Elimina el correo
-            mail.store(correo_id, '+FLAGS', '\\Deleted')
-
-        mail.expunge()  # Borra físicamente los correos marcados para eliminación
-        mail.logout()
-    except Exception as e:
-        error_message = f"Error al gestionar correos enviados: {e}"
-        print_func(error_message)
-        guardar_en_archivo(error_message)
-
-"""def gestionar_correos_enviados(imap_server = 'imap.outlook.com', email_user = emisor, email_pass = contraseña, print_func=print):
+def gestionar_correos_enviados(print_func=print, imap_server = 'imap.outlook.com', email_user = emisor, email_pass = contraseña):
     try:
         mail = imaplib.IMAP4_SSL(imap_server)
         mail.login(email_user, email_pass)
@@ -108,4 +73,4 @@ def gestionar_correos_enviados(imap_server='imap.outlook.com', email_user='emiso
         mail.expunge()  # Borra físicamente los correos marcados para eliminación
         mail.logout()
     except Exception as e:
-        print_func(f"Error al gestionar correos enviados: {e}")"""
+        print_func(f"Error al gestionar correos enviados: {e}")

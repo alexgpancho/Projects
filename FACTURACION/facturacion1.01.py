@@ -1,4 +1,4 @@
-# pip install pyinstaller schedule xlsxwriter pandas openpyxl cryptography smartsheet-python-sdk
+# pip install pyinstaller xlsxwriter pandas openpyxl cryptography smartsheet-python-sdk
 # dependencias
 # Importar librerías
 import re
@@ -6,7 +6,6 @@ import glob
 import os
 import html
 import pandas as pd
-import schedule
 import time
 import pickle
 import locale
@@ -267,6 +266,7 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
             enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], print)
+            print(f"OC Nro: {oc}")
 
     if not dataframe_total.empty:
         dataframe_total['Fecha_convertida'] = pd.to_datetime(dataframe_total['Fecha'], format='%d/%m/%Y', errors='coerce')
@@ -281,6 +281,7 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
                 else:
                     startrow = 0
                 df_mes.to_excel(writer, sheet_name=mes, index=False, header=not bool(startrow), startrow=startrow)
+                writer.book.close()
 
         # Eliminar la hoja temporal si se inicializó el archivo
         if inicializar:
@@ -288,12 +289,12 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
             if 'Hoja_Temporal' in wb.sheetnames:
                 del wb['Hoja_Temporal']
             wb.save(ruta_excel_salida)
+            wb.close()
 
     with open(pickle_file, 'wb') as f:
         pickle.dump(facturas_procesadas, f)
     df_oc_pendientes.to_csv(csv_oc_pendientes, index=False)
 
-    print("Archivo Excel Actualizado")
 
 def cargar_y_mapear_terceros(ruta_terceros_csv):
     # Intenta leer el archivo CSV con diferentes codecs
@@ -311,71 +312,31 @@ def cargar_y_mapear_terceros(ruta_terceros_csv):
     return mapeo_terceros
 
 def main():
-
-    # Programa las otras tareas para ejecución periódica
-    tarea1 = schedule.every(1).second.do(registrar_carpetas_vacias)
-    tarea2 = schedule.every(1).second.do(limpiar_registros_carpetas)
-    tarea3 = schedule.every(1).second.do(actualizar_tabla_excel_y_limpieza, ruta_excel_salida)
-    tarea4 = schedule.every(1).second.do(guardar_backup_si_ha_cambiado)
-
     try:
-        while True:
-            if stop_thread:  # Verifica si se ha señalado la detención
-                print("Deteniendo tareas programadas...")
-                # Cancela todas las tareas programadas
-                schedule.cancel_job(tarea1)
-                schedule.cancel_job(tarea2)
-                schedule.cancel_job(tarea3)
-                schedule.cancel_job(tarea4)
-                break  # Sale del bucle
-            schedule.run_pending()  # Ejecuta las tareas pendientes según su programación.
-            time.sleep(1)  # Espera 1 segundo antes de la próxima verificación de tareas pendientes.
+        registrar_carpetas_vacias()
+        limpiar_registros_carpetas()
+        actualizar_tabla_excel_y_limpieza(ruta_excel_salida)
+        time.sleep(5)
+        gestionar_correos_enviados(print)
+        print("Archivo Excel Actualizado")
+        #guardar_backup_si_ha_cambiado() #OJO
     except Exception as e:
         print(f"Error durante la ejecución de tareas: {e}")
     finally:
-        print("Finalizando el programa principal.")
+        print("Finalizando la ejecución de tareas.")
 
 # Código interfaz gráfica
 
 def iniciar_tareas():
-    global t, stop_thread
     print("Iniciando gestión de facturas, por favor espere.")
-    stop_thread = False
-    t = threading.Thread(target=ejecutar_tareas)
+    t = threading.Thread(target=main)
     t.start()
-
-def check_thread():
-    global t
-    if t.is_alive():
-        # Si el hilo todavía está corriendo, revisa de nuevo en 100 ms
-        window.after(100, check_thread)
-    else:
-        # Cuando el hilo termina, actualiza la interfaz como necesites
-        print("Todas las tareas han sido detenidas.")
-        stop_button.config(relief=tk.RAISED)  # Cambia el relieve del botón si está presionado
-
-def detener_tareas():
-    global t, stop_thread
-    stop_thread = True
-    print("Deteniendo todas las tareas, por favor espere...")
-    stop_button.config(relief=tk.SUNKEN)  # Hace que el botón parezca presionado
-    check_thread()  # Comienza a verificar si el hilo ha terminado
-
-def ejecutar_tareas():
-    try:
-        while not stop_thread:
-            main()
-            time.sleep(1)
-            pass
-    except KeyboardInterrupt:
-        print("Tareas detenidas.")
 
 def enviar_input():
     global user_input
     entrada = entry_box.get()
     entry_box.delete(0, tk.END)
-    with lock:
-        user_input = entrada
+    user_input = entrada
     print(f"Entrada recibida")
     if validar_clave(entrada):
         print("Clave válida. Puede iniciar las tareas.")
@@ -388,36 +349,34 @@ def validar_clave(clave_ingresada):
     datos = security()
     return clave_ingresada == datos['clave']
 
-# Configuración de la ventana principal
 window = tk.Tk()
 window.title("Gestión de Facturas GPF")
 
-# Área de texto para salida
-text_area = scrolledtext.ScrolledText(window, wrap=tk.WORD, width=40, height=10)
-text_area.grid(column=0, row=0, columnspan=3, pady=10, padx=10)
+text_area = scrolledtext.ScrolledText(window, wrap=tk.WORD, width=45, height=14)
+text_area.grid(column=0, row=0, columnspan=3, pady=10, padx=10, sticky="nsew")
 
-# Redefinir la función print para que muestre en el área de texto
+window.grid_columnconfigure(0, weight=1)
+window.grid_columnconfigure(1, weight=1)
+window.grid_columnconfigure(2, weight=1)
+window.grid_rowconfigure(0, weight=1)
+
 def print(*args, **kwargs):
     text_area.insert(tk.END, ' '.join(map(str, args)) + '\n')
     text_area.see(tk.END)
 
-# Mensaje inicial en la caja de texto
 print("Bienvenido. Por favor, ingrese la clave para iniciar.")
 
-# Entrada de texto
-entry_box = tk.Entry(window, width=25)
+entry_box = tk.Entry(window, width=35)
 entry_box.grid(column=0, row=1, pady=10)
 
-# Botón para enviar input
 input_button = tk.Button(window, text="Enviar", command=enviar_input)
 input_button.grid(column=1, row=1)
 
-# Botones de control
 start_button = tk.Button(window, text="Iniciar", command=iniciar_tareas)
 start_button.grid(column=0, row=2, pady=10)
-start_button.config(state=tk.DISABLED)  # Desactivar el botón de inicio inicialmente
+start_button.config(state=tk.DISABLED)
 
-stop_button = tk.Button(window, text="Detener", command=detener_tareas)
+stop_button = tk.Button(window, text="Terminar", command=lambda: os._exit(0))
 stop_button.grid(column=1, row=2)
 
 window.mainloop()
