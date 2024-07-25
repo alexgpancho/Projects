@@ -20,7 +20,7 @@ from openpyxl import load_workbook
 import asyncio
 #Librerías locales
 from security import security
-from manejo_correo import enviar_correo, gestionar_correos_enviados, autenticar
+from manejo_correo import enviar_correo, eliminar_correos_enviados, autenticar
 
 # Rutas de archivos y variables necesarias
 user_input = None
@@ -168,11 +168,11 @@ def extraer_informacion_de_archivo(ruta_archivo):
     contenido = html.unescape(contenido)
 
     patrones = {
+        'autorizacion': r'<numeroAutorizacion>(.*?)<\/numeroAutorizacion>',
         'ruc': r'<ruc>(.*?)<\/ruc>',
         'estab': r'<estab>(.*?)<\/estab>',
         'ptoEmi': r'<ptoEmi>(.*?)<\/ptoEmi>',
         'secuencial': r'<secuencial>(.*?)<\/secuencial>',
-        'total_sin_impuestos': r'<totalSinImpuestos>(.*?)<\/totalSinImpuestos>',
         'fecha_emision': r'<fechaEmision>(.*?)<\/fechaEmision>',
         'nombre_comercial': r'<razonSocial>(.*?)<\/razonSocial>',
         'compania': r'<razonSocialComprador>(.*?)<\/razonSocialComprador>'
@@ -214,7 +214,66 @@ def extraer_informacion_de_archivo(ruta_archivo):
     ]
     datos_extraidos['descripciones'] = " - ".join(descriptions_with_prices)
     
-    return datos_extraidos
+    subtotales = {}
+    iva_values = {}
+
+    # Buscar en la etiqueta "detalle" -> "impuestos" -> "impuesto"
+    detalle_pattern = r'<detalle>(.*?)<\/detalle>'
+    detalle_matches = re.findall(detalle_pattern, contenido, re.DOTALL)
+
+    for detalle in detalle_matches:
+        impuestos_pattern = r'<impuesto>(.*?)<\/impuesto>'
+        impuestos_matches = re.findall(impuestos_pattern, detalle, re.DOTALL)
+
+        for impuesto in impuestos_matches:
+            base_imponible_pattern = r'<baseImponible>(.*?)<\/baseImponible>'
+            tarifa_pattern = r'<tarifa>(.*?)<\/tarifa>'
+            valor_pattern = r'<valor>(.*?)<\/valor>'
+
+            base_imponible = re.search(base_imponible_pattern, impuesto)
+            tarifa = re.search(tarifa_pattern, impuesto)
+            valor = re.search(valor_pattern, impuesto)
+
+            if base_imponible and tarifa and valor:
+                base_imponible = float(base_imponible.group(1))
+                tarifa = float(tarifa.group(1))
+                valor = float(valor.group(1))
+
+                if tarifa not in subtotales:
+                    subtotales[tarifa] = 0
+                if tarifa not in iva_values:
+                    iva_values[tarifa] = 0
+
+                subtotales[tarifa] += base_imponible
+                iva_values[tarifa] += valor
+
+    if not subtotales and not iva_values:
+        total_impuestos_pattern = r'<totalImpuesto>(.*?)<\/totalImpuesto>'
+        total_impuestos_matches = re.findall(total_impuestos_pattern, contenido, re.DOTALL)
+
+        for total_impuesto in total_impuestos_matches:
+            base_imponible_pattern = r'<baseImponible>(.*?)<\/baseImponible>'
+            tarifa_pattern = r'<tarifa>(.*?)<\/tarifa>'
+            valor_pattern = r'<valor>(.*?)<\/valor>'
+
+            base_imponible = re.search(base_imponible_pattern, total_impuesto)
+            tarifa = re.search(tarifa_pattern, total_impuesto)
+            valor = re.search(valor_pattern, total_impuesto)
+
+            if base_imponible and tarifa and valor:
+                base_imponible = float(base_imponible.group(1))
+                tarifa = float(tarifa.group(1))
+                valor = float(valor.group(1))
+
+                if tarifa not in subtotales:
+                    subtotales[tarifa] = 0
+                if tarifa not in iva_values:
+                    iva_values[tarifa] = 0
+
+                subtotales[tarifa] += base_imponible
+                iva_values[tarifa] += valor
+
+    return datos_extraidos, subtotales, iva_values
 
 def actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token):
     # Verifica si el archivo existe, si no, crea un archivo vacío con una hoja inicial
@@ -232,26 +291,37 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token):
     df_oc_pendientes = pd.read_csv(csv_oc_pendientes)
 
     for ruta_archivo in archivos:
-        informacion = extraer_informacion_de_archivo(ruta_archivo)
+        informacion, subtotales, iva_values = extraer_informacion_de_archivo(ruta_archivo)
         factura = f"{informacion['estab']}-{informacion['ptoEmi']}-{informacion['secuencial']}"
         oc = informacion['OC']
 
         if oc not in facturas_procesadas:
             facturas_procesadas[oc] = True
             descripcion = informacion['descripciones']
+
+            # Preparar las nuevas columnas
+            subtotal_0 = subtotales.get(0, 0)
+            tarifas_no_0 = ";".join([str(tarifa) for tarifa in subtotales if tarifa != 0])
+            subtotales_impuesto_no_0 = ";".join([str(subtotales[tarifa]) for tarifa in subtotales if tarifa != 0])
+            iva_no_0 = ";".join([str(iva_values[tarifa]) for tarifa in iva_values if tarifa != 0])
+
             dataframe_temporal = pd.DataFrame({
+                'Autorizacion': [informacion["autorizacion"]],
                 'RUC': [informacion['ruc']],
                 'Tercero': [informacion['Tercero']],
                 'Nombre Comercial': [informacion['nombre_comercial']],
                 'Compañía': [informacion['compania']],
                 'Centro de Costo': [informacion['Centro de Costo']],
                 'Nombre Farmacia': [informacion['Nombre Farmacia']],
-                'Factura': [factura],
-                'Total Sin Impuestos': [informacion['total_sin_impuestos']],
-                'Fecha': [informacion['fecha_formateada']],
                 'OC': [oc],
-                'Frecuencia facturación': [informacion['Frecuencia facturación']],
+                'Factura': [factura],
+                'Fecha': [informacion['fecha_formateada']],
                 'Descripcion': [descripcion],
+                'Subtotal 0%': [subtotal_0],
+                'Tarifa': [tarifas_no_0],
+                'Subtotales Impuesto': [subtotales_impuesto_no_0],
+                'IVA': [iva_no_0],
+                'Frecuencia facturación': [informacion['Frecuencia facturación']]
             })
 
             dataframe_temporal['Fecha de Envío Correo'] = pd.to_datetime('today').strftime('%Y-%m-%d')
@@ -268,7 +338,7 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token):
             cc = "desarrolloinmobiliario@fybeca.com" # OJO
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
-            asyncio.run(enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], access_token, print)) #OJO
+            #asyncio.run(enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], access_token, print)) #OJO
             print(f"OC Nro: {oc}")
 
     if not dataframe_total.empty:
@@ -277,6 +347,9 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token):
 
         for mes in meses:
             df_mes = dataframe_total[dataframe_total['Fecha_convertida'].dt.strftime('%B %Y') == mes]
+
+            # Eliminar la columna 'Fecha_convertida' antes de escribir en el archivo
+            df_mes = df_mes.drop(columns=['Fecha_convertida'])
 
             with pd.ExcelWriter(ruta_excel_salida, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
                 if mes in writer.book.sheetnames:
@@ -315,12 +388,14 @@ def cargar_y_mapear_terceros(ruta_terceros_csv):
 
 def main():
     try:
-        access_token = asyncio.run(autenticar(print))
+        #access_token = asyncio.run(autenticar(print)) #OJO
+        access_token = None #OJO
         registrar_carpetas_vacias()
         limpiar_registros_carpetas()
-        asyncio.run(actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token))
-        time.sleep(5) #OJO
-        asyncio.run(gestionar_correos_enviados(print, access_token))
+        #asyncio.run(actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token)) #OJO 
+        actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token)#OJO
+        #time.sleep(5) #OJO
+        #asyncio.run(eliminar_correos_enviados(print, access_token)) #OJO
         print("Archivo Excel Actualizado")
         # guardar_backup_si_ha_cambiado() #OJO
     except Exception as e:

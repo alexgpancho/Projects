@@ -99,7 +99,7 @@ async def autenticar(print_func):
         print_func(f"Error durante la autenticación: {str(e)}")
         raise
 
-async def gestionar_correos_enviados(print_func, access_token):
+async def eliminar_correos_enviados(print_func, access_token):
     try:
         headers = {
             'Authorization': f'Bearer {access_token}',
