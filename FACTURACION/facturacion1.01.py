@@ -1,4 +1,4 @@
-# pip install pyinstaller xlsxwriter pandas openpyxl cryptography smartsheet-python-sdk azure-identity
+# pip install pyinstaller xlsxwriter pandas openpyxl cryptography smartsheet-python-sdk azure-identity httpx
 
 
 # dependencias
