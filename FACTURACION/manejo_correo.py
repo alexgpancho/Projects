@@ -8,11 +8,11 @@ import os
 import time
 import imaplib
 
-#emisor = 'facturas_gpf_sierra@outlook.com'
-#contraseña = 'cnvzpbgggmtdqiry'
+emisor = 'facturas_gpf_sierra@outlook.com'
+contraseña = 'cnvzpbgggmtdqiry'
 
-emisor = 'facturas_gpf@outlook.com'
-contraseña = 'lleibtocysmvsnko'
+#emisor = 'facturas_gpf@outlook.com'
+#contraseña = 'lleibtocysmvsnko'
 
 def enviar_correo(asunto, cuerpo, destinatario, cc, adjuntos=[], print_func=print, max_reintentos=3):
 

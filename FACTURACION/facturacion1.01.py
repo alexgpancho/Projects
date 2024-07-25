@@ -262,10 +262,10 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
             cuerpo = f"Buen día estimados, \n Por favor su gentil ayuda con el registro de la factura \n Factura No: {factura} \n OC: {oc}"
             #destinatario = 'g_gyerecepcionfacturasservicios@corporaciongpf.com'
             destinatario = 'aaguanangap@corporaciongpf.com' #Para pruebas
-            cc = "desarrolloinmobiliario@fybeca.com"
+            cc = "desarrolloinmobiliario@fybeca.com" # OJO
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
-            enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], print)
+            enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], print) #OJO
             print(f"OC Nro: {oc}")
 
     if not dataframe_total.empty:
@@ -304,7 +304,6 @@ def cargar_y_mapear_terceros(ruta_terceros_csv):
         terceros_df = pd.read_csv(ruta_terceros_csv, encoding='latin1')  # Prueba con el codec latin1
 
     terceros_df['RUC'] = terceros_df['RUC'].apply(lambda x: normalizar_ruc(str(x)))
-    #mapeo_terceros = terceros_df.set_index('RUC')['TERCERO'].to_dict()
     terceros_df.drop_duplicates(subset='RUC', inplace=True)
     mapeo_terceros = terceros_df.set_index('RUC')[['TERCERO', 'CC', 'NOMBRE FARMACIA', 'FACTURA SEMESTRAL/MENSUAL']].to_dict(orient='index')
 
@@ -316,8 +315,8 @@ def main():
         registrar_carpetas_vacias()
         limpiar_registros_carpetas()
         actualizar_tabla_excel_y_limpieza(ruta_excel_salida)
-        time.sleep(5)
-        gestionar_correos_enviados(print)
+        time.sleep(5) #OJO
+        gestionar_correos_enviados(print) #OJO
         print("Archivo Excel Actualizado")
         #guardar_backup_si_ha_cambiado() #OJO
     except Exception as e:
