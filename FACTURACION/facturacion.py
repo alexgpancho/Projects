@@ -339,7 +339,7 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token):
             cc = "desarrolloinmobiliario@fybeca.com" # OJO
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
-            #asyncio.run(enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], access_token, print)) #OJO
+            asyncio.run(enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], access_token, print)) #OJO
             print(f"OC Nro: {oc}")
 
     if not dataframe_total.empty:
@@ -389,16 +389,14 @@ def cargar_y_mapear_terceros(ruta_terceros_csv):
 
 def main():
     try:
-        #access_token = asyncio.run(autenticar(print)) #OJO
-        access_token = None #OJO
+        access_token = asyncio.run(autenticar(print)) #OJO
         registrar_carpetas_vacias()
         limpiar_registros_carpetas()
-        #asyncio.run(actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token)) #OJO 
-        actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token)#OJO
-        #time.sleep(5) #OJO
-        #asyncio.run(eliminar_correos_enviados(print, access_token)) #OJO
+        asyncio.run(actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token)) #OJO 
+        time.sleep(5) #OJO
+        asyncio.run(eliminar_correos_enviados(print, access_token)) #OJO
         print("Archivo Excel Actualizado")
-        # guardar_backup_si_ha_cambiado() #OJO
+        guardar_backup_si_ha_cambiado() #OJO
     except Exception as e:
         print(f"Error durante la ejecución de tareas: {e}")
     finally:

@@ -4,6 +4,7 @@ import configparser
 from azure.identity import DeviceCodeCredential
 import httpx
 import asyncio
+import webbrowser
 
 async def enviar_correo(asunto, cuerpo, destinatario, cc, adjuntos=[], access_token=None, print_func=print, max_reintentos=3):
     try:
@@ -80,6 +81,8 @@ async def autenticar(print_func):
         def print_code_callback(verification_uri, user_code, expires_on):
             print_func(f"Para iniciar sesión ve a {verification_uri} y entra el código {user_code} para autenticarte.")
             print_func(f"El código expira en: {expires_on.strftime('%Y-%m-%d %H:%M:%S')}")
+            # Abre la URL en el navegador predeterminado del sistema
+            webbrowser.open(verification_uri)
 
         device_code_credential = DeviceCodeCredential(
             client_id=client_id,
