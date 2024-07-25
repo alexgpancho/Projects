@@ -1,4 +1,6 @@
-# pip install pyinstaller xlsxwriter pandas openpyxl cryptography smartsheet-python-sdk
+# pip install pyinstaller xlsxwriter pandas openpyxl cryptography smartsheet-python-sdk azure-identity
+
+
 # dependencias
 # Importar librerías
 import re
@@ -15,9 +17,10 @@ import threading
 from tkinter import scrolledtext
 from datetime import datetime
 from openpyxl import load_workbook
+import asyncio
 #Librerías locales
 from security import security
-from manejo_correo import enviar_correo, gestionar_correos_enviados
+from manejo_correo import enviar_correo, gestionar_correos_enviados, autenticar
 
 # Rutas de archivos y variables necesarias
 user_input = None
@@ -312,20 +315,20 @@ def cargar_y_mapear_terceros(ruta_terceros_csv):
 
 def main():
     try:
+        access_token = asyncio.run(autenticar(print))
         registrar_carpetas_vacias()
         limpiar_registros_carpetas()
         actualizar_tabla_excel_y_limpieza(ruta_excel_salida)
         time.sleep(5) #OJO
-        gestionar_correos_enviados(print) #OJO
+        asyncio.run(gestionar_correos_enviados(print, access_token))
         print("Archivo Excel Actualizado")
-        #guardar_backup_si_ha_cambiado() #OJO
+        # guardar_backup_si_ha_cambiado() #OJO
     except Exception as e:
         print(f"Error durante la ejecución de tareas: {e}")
     finally:
         print("Finalizando la ejecución de tareas.")
 
 # Código interfaz gráfica
-
 def iniciar_tareas():
     print("Iniciando gestión de facturas, por favor espere.")
     t = threading.Thread(target=main)

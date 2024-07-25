@@ -1,19 +1,21 @@
 #Test GH
 import smtplib
-import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
 import os
 import time
-import imaplib
+import configparser
+from azure.identity import DeviceCodeCredential
+import httpx
+import asyncio
 
-emisor = 'facturas_gpf_sierra@outlook.com'
-contraseña = 'cnvzpbgggmtdqiry'
+#emisor = 'facturas_gpf_sierra@outlook.com'
+#contraseña = 'cnvzpbgggmtdqiry'
 
-#emisor = 'facturas_gpf@outlook.com'
-#contraseña = 'lleibtocysmvsnko'
+emisor = 'facturas_gpf@outlook.com'
+contraseña = 'lleibtocysmvsnko'
 
 def enviar_correo(asunto, cuerpo, destinatario, cc, adjuntos=[], print_func=print, max_reintentos=3):
 
@@ -53,25 +55,68 @@ def enviar_correo(asunto, cuerpo, destinatario, cc, adjuntos=[], print_func=prin
     if not enviado:
         print_func(f"Fallo al enviar el correo a {destinatarios} después de {max_reintentos} intentos.")
 
-def gestionar_correos_enviados(print_func=print, imap_server = 'imap.outlook.com', email_user = emisor, email_pass = contraseña):
+async def autenticar(print_func):
     try:
-        mail = imaplib.IMAP4_SSL(imap_server)
-        mail.login(email_user, email_pass)
-        mail.select("/Sent")  # Carpeta de correos enviados en Outlook
+        config = configparser.ConfigParser()
+        config.read(['config.cfg', 'config.dev.cfg'])
+        azure_settings = config['azure']
 
-        result, data = mail.search(None, 'ALL')
-        correo_ids = data[0].split()
+        client_id = azure_settings['clientId']
+        tenant_id = azure_settings['tenantId']
+        graph_scopes = azure_settings['graphUserScopes'].split(' ')
 
-        for correo_id in correo_ids:
-            result, mensaje_data = mail.fetch(correo_id, '(RFC822)')
-            mensaje = email.message_from_bytes(mensaje_data[0][1])
-            asunto = mensaje['subject']
-            print_func(f"Título del correo enviado: {asunto}")
+        # Callback to handle the device code presentation
+        def print_code_callback(verification_uri, user_code, expires_on):
+            print_func(f"Para iniciar sesión ve a {verification_uri} y entra el código {user_code} para autenticarte.")
+            print_func(f"El código expira en: {expires_on.strftime('%Y-%m-%d %H:%M:%S')}")
 
-            # Elimina el correo
-            mail.store(correo_id, '+FLAGS', '\\Deleted')
+        device_code_credential = DeviceCodeCredential(
+            client_id=client_id,
+            tenant_id=tenant_id,
+            prompt_callback=print_code_callback
+        )
 
-        mail.expunge()  # Borra físicamente los correos marcados para eliminación
-        mail.logout()
+        # Authenticate and obtain the access token
+        access_token = device_code_credential.get_token(*graph_scopes).token
+        return access_token
     except Exception as e:
-        print_func(f"Error al gestionar correos enviados: {e}")
+        print_func(f"Error durante la autenticación: {str(e)}")
+        raise
+
+async def gestionar_correos_enviados(print_func, access_token):
+    try:
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Accept': 'application/json'
+        }
+
+        async with httpx.AsyncClient() as client:
+            # Obtener carpetas de correo
+            response = await client.get('https://graph.microsoft.com/v1.0/me/mailFolders', headers=headers)
+            response.raise_for_status()
+            folders = response.json()['value']
+
+            sent_items_folder_id = None
+            for folder in folders:
+                if folder['displayName'] == 'Elementos enviados':
+                    sent_items_folder_id = folder['id']
+                    break
+
+            if sent_items_folder_id:
+                # Listar mensajes en la carpeta de elementos enviados
+                messages_response = await client.get(f'https://graph.microsoft.com/v1.0/me/mailFolders/{sent_items_folder_id}/messages', headers=headers)
+                messages_response.raise_for_status()
+                messages = messages_response.json()['value']
+
+                for message in messages:
+                    # Eliminar cada mensaje
+                    delete_response = await client.delete(f'https://graph.microsoft.com/v1.0/me/messages/{message["id"]}', headers=headers)
+                    delete_response.raise_for_status()
+
+                print_func("Correos enviados eliminados.")
+            else:
+                print_func("No se encontró la carpeta de Elementos enviados.")
+    except httpx.HTTPStatusError as e:
+        print_func(f"Error HTTP: {e.response.status_code} - {e.response.text}")
+    except Exception as e:
+        print_func(f"Error: {str(e)}")
