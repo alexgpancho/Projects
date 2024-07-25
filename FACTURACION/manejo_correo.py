@@ -1,11 +1,10 @@
 #Test GH
-import smtplib
 from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
 from email import encoders
+import base64
 import os
-import time
 import configparser
 from azure.identity import DeviceCodeCredential
 import httpx
@@ -14,46 +13,66 @@ import asyncio
 #emisor = 'facturas_gpf_sierra@outlook.com'
 #contraseña = 'cnvzpbgggmtdqiry'
 
-emisor = 'facturas_gpf@outlook.com'
-contraseña = 'lleibtocysmvsnko'
+async def enviar_correo(asunto, cuerpo, destinatario, cc, adjuntos=[], access_token=None, print_func=print, max_reintentos=3):
+    try:
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        }
 
-def enviar_correo(asunto, cuerpo, destinatario, cc, adjuntos=[], print_func=print, max_reintentos=3):
+        mensaje = {
+            "message": {
+                "subject": asunto,
+                "body": {
+                    "contentType": "Text",
+                    "content": cuerpo
+                },
+                "toRecipients": [
+                    {"emailAddress": {"address": destinatario}}
+                ],
+                "ccRecipients": [
+                    {"emailAddress": {"address": email.strip()}} for email in cc.split(',')
+                ],
+                "attachments": []
+            }
+        }
 
-    mensaje = MIMEMultipart()
-    mensaje['From'] = emisor
-    mensaje['To'] = destinatario
-    mensaje['Cc'] = cc
-    mensaje['Subject'] = asunto
-    mensaje.attach(MIMEText(cuerpo, 'plain'))
-    destinatarios = [destinatario] + cc.split(',')
+        for archivo in adjuntos:
+            with open(archivo, 'rb') as f:
+                file_content = f.read()
+            mensaje['message']['attachments'].append({
+                "@odata.type": "#microsoft.graph.fileAttachment",
+                "name": os.path.basename(archivo),
+                "contentBytes": base64.b64encode(file_content).decode('utf-8'),
+                "contentType": "application/octet-stream"
+            })
 
-    for archivo in adjuntos:
-        parte = MIMEBase('application', 'octet-stream')
-        with open(archivo, 'rb') as file:
-            parte.set_payload(file.read())
-        encoders.encode_base64(parte)
-        parte.add_header('Content-Disposition', f"attachment; filename= {os.path.basename(archivo)}")
-        mensaje.attach(parte)
+        intentos = 0
+        enviado = False
+        while intentos < max_reintentos and not enviado:
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        'https://graph.microsoft.com/v1.0/me/sendMail',
+                        headers=headers,
+                        json=mensaje
+                    )
+                    response.raise_for_status()
+                    enviado = True
+                    print_func(f"Correo enviado: {asunto} en el intento {intentos + 1}")
+            except httpx.HTTPStatusError as e:
+                intentos += 1
+                print_func(f"Error al enviar correo: {e.response.status_code} - {e.response.text}. Reintentando... ({intentos}/{max_reintentos})")
+                await asyncio.sleep(5)
+            except Exception as e:
+                intentos += 1
+                print_func(f"Error al enviar correo: {str(e)}. Reintentando... ({intentos}/{max_reintentos})")
+                await asyncio.sleep(5)
 
-    intentos = 0
-    enviado = False
-    while intentos < max_reintentos and not enviado:
-        try:
-            server = smtplib.SMTP('smtp.office365.com', 587)
-            server.starttls()
-            server.login(emisor, contraseña)
-            text = mensaje.as_string()
-            server.sendmail(emisor, destinatarios, text)
-            server.quit()
-            enviado = True
-            print_func(f"Correo enviado a {destinatarios} en el intento {intentos + 1}")
-        except Exception as e:
-            intentos += 1
-            print_func(f"Error al enviar correo: {e}. Reintentando... ({intentos}/{max_reintentos})")
-            time.sleep(5)
-
-    if not enviado:
-        print_func(f"Fallo al enviar el correo a {destinatarios} después de {max_reintentos} intentos.")
+        if not enviado:
+            print_func(f"Fallo al enviar el correo a {destinatario} después de {max_reintentos} intentos.")
+    except Exception as e:
+        print_func(f"Error en el envío de correo: {str(e)}")
 
 async def autenticar(print_func):
     try:

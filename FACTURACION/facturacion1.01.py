@@ -216,7 +216,7 @@ def extraer_informacion_de_archivo(ruta_archivo):
     
     return datos_extraidos
 
-def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
+def actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token):
     # Verifica si el archivo existe, si no, crea un archivo vacío con una hoja inicial
     inicializar = not os.path.exists(ruta_excel_salida)
     if inicializar:
@@ -268,7 +268,7 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida):
             cc = "desarrolloinmobiliario@fybeca.com" # OJO
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
-            enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], print) #OJO
+            asyncio.run(enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], access_token, print)) #OJO
             print(f"OC Nro: {oc}")
 
     if not dataframe_total.empty:
@@ -318,7 +318,7 @@ def main():
         access_token = asyncio.run(autenticar(print))
         registrar_carpetas_vacias()
         limpiar_registros_carpetas()
-        actualizar_tabla_excel_y_limpieza(ruta_excel_salida)
+        asyncio.run(actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token))
         time.sleep(5) #OJO
         asyncio.run(gestionar_correos_enviados(print, access_token))
         print("Archivo Excel Actualizado")
