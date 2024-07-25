@@ -1,7 +1,8 @@
+# V1.02 Alexis G
+
 # pip install pyinstaller xlsxwriter pandas openpyxl cryptography smartsheet-python-sdk azure-identity httpx
-
-
 # dependencias
+
 # Importar librerías
 import re
 import glob
