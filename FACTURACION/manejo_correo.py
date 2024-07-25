@@ -10,9 +10,6 @@ from azure.identity import DeviceCodeCredential
 import httpx
 import asyncio
 
-#emisor = 'facturas_gpf_sierra@outlook.com'
-#contraseña = 'cnvzpbgggmtdqiry'
-
 async def enviar_correo(asunto, cuerpo, destinatario, cc, adjuntos=[], access_token=None, print_func=print, max_reintentos=3):
     try:
         headers = {
