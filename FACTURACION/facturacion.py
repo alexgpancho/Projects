@@ -392,7 +392,7 @@ def main():
         access_token = asyncio.run(autenticar(print)) #OJO
         registrar_carpetas_vacias()
         limpiar_registros_carpetas()
-        asyncio.run(actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token)) #OJO 
+        actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token)
         time.sleep(5) #OJO
         asyncio.run(eliminar_correos_enviados(print, access_token)) #OJO
         print("Archivo Excel Actualizado")
