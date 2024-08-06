@@ -6,7 +6,7 @@
 # Importar librerías
 import re
 import glob
-import os
+import os  
 import html
 import pandas as pd
 import time
@@ -34,6 +34,7 @@ csv_oc_pendientes = os.path.join(current_dir, 'OCs_Pendientes.csv')
 pickle_file = os.path.join(current_dir, 'OCS\\facturas_procesadas.pickle')
 ruta_excel_salida = os.path.join(current_dir, 'Facturas Sierra.xlsx')
 ruta_terceros_csv = os.path.join(current_dir, 'terceros.csv')
+ruta_destinatarios = os.path.join(current_dir,'destinatarios.csv')
 
 # Funciones principales
 def ha_cambiado():
@@ -291,6 +292,15 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token):
         facturas_procesadas = pickle.load(f)
     df_oc_pendientes = pd.read_csv(csv_oc_pendientes)
 
+    # Intentar leer el archivo CSV con diferentes codificaciones
+    try:
+        df = pd.read_csv(ruta_destinatarios, encoding='utf-8')
+    except UnicodeDecodeError:
+        df = pd.read_csv(ruta_destinatarios, encoding='latin1')
+    
+    destinatario = df['destinatario'].iloc[0]
+    cc = df['cc'].iloc[0]
+
     for ruta_archivo in archivos:
         informacion, subtotales, iva_values = extraer_informacion_de_archivo(ruta_archivo)
         factura = f"{informacion['estab']}-{informacion['ptoEmi']}-{informacion['secuencial']}"
@@ -334,9 +344,6 @@ def actualizar_tabla_excel_y_limpieza(ruta_excel_salida, access_token):
 
             asunto = f"FACTURA ARRIENDO {informacion['compania']} No {factura}"
             cuerpo = f"Buen día estimados, \n Por favor su gentil ayuda con el registro de la factura \n Factura No: {factura} \n OC: {oc}"
-            #destinatario = 'g_gyerecepcionfacturasservicios@corporaciongpf.com'
-            destinatario = 'aaguanangap@corporaciongpf.com' #Para pruebas
-            cc = "desarrolloinmobiliario@fybeca.com" # OJO
             ruta_xml = ruta_archivo
             ruta_pdf = ruta_archivo.replace('.xml', '.pdf')
             asyncio.run(enviar_correo(asunto, cuerpo, destinatario, cc, [ruta_xml, ruta_pdf], access_token, print)) #OJO

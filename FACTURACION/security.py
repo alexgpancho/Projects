@@ -55,7 +55,7 @@ def generar_cadena_fecha():
     # Obtener la fecha y hora actual
     ahora = datetime.now()
     # Formatear la cadena en el formato deseado
-    cadena = f"INMO2-{ahora.month:02d}-{ahora.year}"
+    cadena = f"INMO-{ahora.month:02d}-{ahora.year}"
     return cadena
 
 def guardar_datos(seed: str, app_key: str):
