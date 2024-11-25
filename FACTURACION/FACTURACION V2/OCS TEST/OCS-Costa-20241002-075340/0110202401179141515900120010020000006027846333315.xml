@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><factura xmlns:ds="http://www.w3.org/2000/09/xmldsig#" id="comprobante" version="1.1.0">
+    <infoTributaria>
+        <ambiente>2</ambiente>
+        <tipoEmision>1</tipoEmision>
+        <razonSocial>INMOFYBE S.A.</razonSocial>
+        <nombreComercial>INMOFYBE S.A.</nombreComercial>
+        <ruc>1791415159001</ruc>
+        <claveAcceso>0110202401179141515900120010020000006027846333315</claveAcceso>
+        <codDoc>01</codDoc>
+        <estab>001</estab>
+        <ptoEmi>002</ptoEmi>
+        <secuencial>000000602</secuencial>
+        <dirMatriz>ISLA SAN CRISTOBAL 180 A y  GENERAL ENRIQUEZ</dirMatriz>
+        <agenteRetencion>1</agenteRetencion>
+    </infoTributaria>
+    <infoFactura>
+        <fechaEmision>01/10/2024</fechaEmision>
+        <dirEstablecimiento>ISLA SAN CRISTOBAL 180 A y  GENERAL ENRIQUEZ</dirEstablecimiento>
+        <obligadoContabilidad>SI</obligadoContabilidad>
+        <tipoIdentificacionComprador>04</tipoIdentificacionComprador>
+        <razonSocialComprador>Farmacias y Comisariatos de Medicinas S.A. FARCOMED</razonSocialComprador>
+        <identificacionComprador>1790710319001</identificacionComprador>
+        <direccionComprador>Av de los Shyris km 5 y medio vía Amaguaña</direccionComprador>
+        <totalSinImpuestos>11694.49</totalSinImpuestos>
+        <totalDescuento>0.00</totalDescuento>
+        <totalConImpuestos>
+            <totalImpuesto>
+                <codigo>2</codigo>
+                <codigoPorcentaje>4</codigoPorcentaje>
+                <baseImponible>11694.49</baseImponible>
+                <tarifa>15.00</tarifa>
+                <valor>1754.17</valor>
+            </totalImpuesto>
+        </totalConImpuestos>
+        <importeTotal>13448.66</importeTotal>
+        <moneda>DOLAR</moneda>
+        <pagos>
+            <pago>
+                <formaPago>20</formaPago>
+                <total>13448.66</total>
+                <plazo>5</plazo>
+                <unidadTiempo>DÍAS</unidadTiempo>
+            </pago>
+        </pagos>
+    </infoFactura>
+    <detalles>
+        <detalle>
+            <codigoPrincipal>001</codigoPrincipal>
+            <descripcion>Arriendo del mes de octubre de 2024, Fybeca Los Mangos</descripcion>
+            <cantidad>1</cantidad>
+            <precioUnitario>6437.31</precioUnitario>
+            <descuento>0</descuento>
+            <precioTotalSinImpuesto>6437.31</precioTotalSinImpuesto>
+            <impuestos>
+                <impuesto>
+                    <codigo>2</codigo>
+                    <codigoPorcentaje>4</codigoPorcentaje>
+                    <tarifa>15.00</tarifa>
+                    <baseImponible>6437.31</baseImponible>
+                    <valor>965.60</valor>
+                </impuesto>
+            </impuestos>
+        </detalle>
+        <detalle>
+            <codigoPrincipal>002</codigoPrincipal>
+            <descripcion>Arriendo del mes de octubre de 2024, Fybeca Manicentro</descripcion>
+            <cantidad>1</cantidad>
+            <precioUnitario>5257.18</precioUnitario>
+            <descuento>0</descuento>
+            <precioTotalSinImpuesto>5257.18</precioTotalSinImpuesto>
+            <impuestos>
+                <impuesto>
+                    <codigo>2</codigo>
+                    <codigoPorcentaje>4</codigoPorcentaje>
+                    <tarifa>15.00</tarifa>
+                    <baseImponible>5257.18</baseImponible>
+                    <valor>788.58</valor>
+                </impuesto>
+            </impuestos>
+        </detalle>
+    </detalles>
+    <infoAdicional>
+        <campoAdicional nombre="telefono">023829800</campoAdicional>
+        <campoAdicional nombre="email">gvillamar@inmofybe.com;krrobalinoj@corporaciongpf.com;mmtenoriob@corporaciongpf.com</campoAdicional>
+    </infoAdicional>
+<ds:Signature xmlns:etsi="http://uri.etsi.org/01903/v1.3.2#" Id="Signature429045675"><ds:SignedInfo Id="SignedInfoDoc"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><ds:Reference Id="SignedProperties151" Type="http://uri.etsi.org/01903#SignedProperties" URI="#SignedProperties"><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><ds:DigestValue>fmEgpxp86y1u3Q30k+Msq8HseKQ=</ds:DigestValue></ds:Reference><ds:Reference Id="Cert540" URI="#Certificate"><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><ds:DigestValue>VZQFBhBsVcYCyJRkajGOySAFVDQ=</ds:DigestValue></ds:Reference><ds:Reference Id="Reference179" URI="#comprobante"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><ds:DigestValue>g0JKfUQWnSuYBWfbWqCe3z5UIag=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>SmVzq5mpoepV8MSk437RLi2qD+XL2DBHgb648hJm6inX2+VG21e8QXcJLBe85UE9swW8ZBEsvm1AkC1ckA2D/5EVIG6w1eDfIij4okE1Y/aq7U8Srv+U9HdWr01oP6LLoSYjWZMS35r9OogYmWn/TjejP9Wd0pMHugm7F10s0nXdrKZZk4ihiI4FyeYNXQgiSi3iR6mI3QYcBanZr061baiYk/B1tOvnPeepeMvH7YM8ox4sg58nIsWuAUDcoYVIn9z+ELu8HV084vidKqpmFjFq54KHuqUicuQuq2XoqOp0fa9kHCjQNK5sa51zgnwLUWZXzbj1dWqsvyi6MbaiNg==</ds:SignatureValue><ds:KeyInfo Id="Certificate"><ds:X509Data><ds:X509Certificate>MIIJoDCCB4igAwIBAgIIPjCPvPjKSa8wDQYJKoZIhvcNAQELBQAwgbgxCzAJBgNVBAYTAkVTMUQwQgYDVQQHDDtCYXJjZWxvbmEgKHNlZSBjdXJyZW50IGFkZHJlc3MgYXQgd3d3LnVhbmF0YWNhLmNvbS9hZGRyZXNzKTEWMBQGA1UECgwNVUFOQVRBQ0EgUy5BLjEVMBMGA1UECwwMVFNQLVVBTkFUQUNBMRowGAYDVQQDDBFVQU5BVEFDQSBDQTIgMjAxNjEYMBYGA1UEYQwPVkFURVMtQTY2NzIxNDk5MB4XDTI0MDQxMjIxNTgwMFoXDTI2MDQxMjIxNTgwMFowgc4xCzAJBgNVBAYTAkVDMRYwFAYDVQQKDA1JTk1PRllCRSBTLkEuMRgwFgYDVQQMDA9HRVJFTlRFIEdFTkVSQUwxGTAXBgNVBAQMEFZJTExBTUFSIFVUUkVSQVMxEzARBgNVBCoMCkdJTkEgTFVDSUExGTAXBgNVBAUTEElEQ0VDLTE3MDM4Mzg2MzkxJDAiBgNVBAMMG0dJTkEgTFVDSUEgVklMTEFNQVIgVVRSRVJBUzEcMBoGA1UEYQwTVkFURUMtMTc5MTQxNTE1OTAwMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAIv133j2IovZfOjZElFc3abmvERI6O4krNZ7PJYfOrfnixn8n2bkvw/lmlNqUGiLwzzsgRV7TEcAUgdCZ9vDyTwPoRvRJMpnf+FGXON9lk1TxYJDnauq4L4qcYNtBzw3KvC3z6YBg019F8kU8tguCc1mNZiXGN17M8AKm/EEMqFb/u6MmKp27/QDn7usnNPcF0hExpeqadJIqj9aqljaMR7L2/BrASf8Q3LPskC60eA8zHJDJwDH08eZqHLxz/D7DI8PwWFLtJGXJWQR5Xc+lmZY8BGztQB6/It8HNR+x2Y3XbRN6KFBK3Eq1hC3n9ob5chE75Ifdh432Ihrf5sTiJMCAwEAAaOCBJQwggSQMBsGCysGAQQBgvE2ZgMBBAwMCjE3MDM4Mzg2MzkwHgYLKwYBBAGC8TZmAwsEDwwNMTc5MTQxNTE1OTAwMTCB1wYIKwYBBQUHAQEEgcowgccwVQYIKwYBBQUHMAKGSWh0dHA6Ly93d3cudWFuYXRhY2EuY29tL3B1YmxpYy9kb3dubG9hZC90c3BfY2VydGlmaWNhdGVzL3N1Ym9yZGluYXRlMS5jcnQwNgYIKwYBBQUHMAGGKmh0dHA6Ly9vY3NwMS51YW5hdGFjYS5jb20vcHVibGljL3BraS9vY3NwLzA2BggrBgEFBQcwAYYqaHR0cDovL29jc3AyLnVhbmF0YWNhLmNvbS9wdWJsaWMvcGtpL29jc3AvMB0GA1UdDgQWBBRuceNxthK1QlRkTDEx4Xdn524yPTAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFH1X52BzzgdGqeKjaPDhEbJ0knP9MIGOBgNVHSAEgYYwgYMwgYAGDCsGAQQBgvE2ZgIDATBwMDcGCCsGAQUFBwIBFitodHRwczovL3d3dy51YW5hdGFjYS5jb20vcHVibGljL3BraS9kcGMtZWMvMDUGCCsGAQUFBwICMCkMJ0NFUlRJRklDQURPIERFIFJFUFJFU0VOVEFOVEUgRU4gQVJDSElWTzCBjwYDVR0fBIGHMIGEMECgPqA8hjpodHRwOi8vY3JsMS51YW5hdGFjYS5jb20vcHVibGljL3BraS9jcmwvQ0Eyc3Vib3JkaW5hZGEuY3JsMECgPqA8hjpodHRwOi8vY3JsMi51YW5hdGFjYS5jb20vcHVibGljL3BraS9jcmwvQ0Eyc3Vib3JkaW5hZGEuY3JsMA4GA1UdDwEB/wQEAwIF4DAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwggHVBgNVHREEggHMMIIByIEfYWRtaW5pc3RyYWNpb25AYmlvc2ZlcmFzb2Z0LmNvbaAbBgsrBgEEAYLxNmYDAaAMDAoxNzAzODM4NjM5oBsGCysGAQQBgvE2ZgMCoAwMCkdJTkEgTFVDSUGgGQYLKwYBBAGC8TZmAwOgCgwIVklMTEFNQVKgGAYLKwYBBAGC8TZmAwSgCQwHVVRSRVJBU6AgBgsrBgEEAYLxNmYDBaARDA9HRVJFTlRFIEdFTkVSQUygQQYLKwYBBAGC8TZmAwegMgwwU0FOIFJBRkFFTCBDQUxMRSBJU0xBIFNBTiBDUklTVE9CQUwgTlVNRVJPIDE4MCBBoB8GCysGAQQBgvE2ZgMIoBAMDjAwNTkzOTk3NDc5Nzg0oBsGCysGAQQBgvE2ZgMJoAwMClNBTkdPTFFVw42gHgYLKwYBBAGC8TZmAwqgDwwNSU5NT0ZZQkUgUy5BLqAeBgsrBgEEAYLxNmYDC6APDA0xNzkxNDE1MTU5MDAxoBMGCysGAQQBgvE2ZgMMoAQMAkVDoCQGCysGAQQBgvE2ZgMyoBUME1JFUFJFU0VOVEFOVEUgTEVHQUygGAYLKwYBBAGC8TZmAzOgCQwHQVJDSElWTzANBgkqhkiG9w0BAQsFAAOCAgEAA02JvgpONPwAlREkGj0Y3AbJzZd11oDhEy9C5CFeasiKtpSm7BMdSsenQ7SIJeSnG22CRVIBfHF6zI6y1h0YiR5UXOtJBSPesjgHqhM70j/rb8s9mvrGdJrpk0dKDbmn/YTuBG5FHpt9kCspVHEpZG0BJyKvNLVRTiMnlzksm5sCJN72cDFdVaSwvSmKYQbMIgntlKGyKfmLc0MaIpuQpAPY0FxAiC0RBePFKs39SOkkzr6U5uZc3ZpYOG5iAL8L6bW4h95dQv7sq0vMo//k2K5siE5eLUg0eu02SgKSaCCpn2VFN3TKF3Q3ARy0hddOV9uHUrXeIj6wrRfIg2EpsnankIUgyfg2LbKCzmKEVKRdQc9SNhUifRP2GbZu372Y9CUXMN0T+TrZiQELdvHopQxDYlIU554FEtjXZer5tgmDPfIaUvmLdx0gxEOdF2W2kNNhAV0tSyGFsEMNNcdUhYEz7aonXxZoM0Xap+l9MyC7sWWDdk1/uegxA6sD5qzVgafFws1eH5Mc8S3GP/IHAM/VTY23RB7K6N1By/OW5XaX00GamBcGz4J76cpT7bWTo3z4rvYUNBWNVN3ppCPMJ65OivpYCXtUgAeALVLHTVODeDDiAPOmxw3dAnQmmYxcHl/RdqQW2ZXxMo7/Up58zTTfTFL3m96+nTOCUSMRnOM=</ds:X509Certificate></ds:X509Data><ds:KeyValue><ds:RSAKeyValue><ds:Modulus>i/XfePYii9l86NkSUVzdpua8REjo7iSs1ns8lh86t+eLGfyfZuS/D+WaU2pQaIvDPOyBFXtMRwBSB0Jn28PJPA+hG9Ekymd/4UZc432WTVPFgkOdq6rgvipxg20HPDcq8LfPpgGDTX0XyRTy2C4JzWY1mJcY3XszwAqb8QQyoVv+7oyYqnbv9AOfu6yc09wXSETGl6pp0kiqP1qqWNoxHsvb8GsBJ/xDcs+yQLrR4DzMckMnAMfTx5mocvHP8PsMjw/BYUu0kZclZBHldz6WZljwEbO1AHr8i3wc1H7HZjddtE3ooUErcSrWELef2hvlyETvkh92HjfYiGt/mxOIkw==</ds:Modulus><ds:Exponent>AQAB</ds:Exponent></ds:RSAKeyValue></ds:KeyValue></ds:KeyInfo><ds:Object Id="Signature429045675-Object"><etsi:QualifyingProperties Target="#Signature429045675"><etsi:SignedProperties Id="SignedProperties"><etsi:SignedSignatureProperties><etsi:SigningTime>2024-10-01T11:40:18</etsi:SigningTime><etsi:SigningCertificate><etsi:Cert><etsi:CertDigest><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><ds:DigestValue>mLaD1RXibiYJpAkSnCAVwuvSIsI=</ds:DigestValue></etsi:CertDigest><etsi:IssuerSerial><ds:X509IssuerName>2.5.4.97=#0c0f56415445532d413636373231343939,CN=UANATACA CA2 2016,OU=TSP-UANATACA,O=UANATACA S.A.,L=Barcelona (see current address at www.uanataca.com/address),C=ES</ds:X509IssuerName><ds:X509SerialNumber>4481239671024273839</ds:X509SerialNumber></etsi:IssuerSerial></etsi:Cert></etsi:SigningCertificate></etsi:SignedSignatureProperties><etsi:SignedDataObjectProperties><etsi:DataObjectFormat ObjectReference="#Reference179"><etsi:Description>Comprobante SRI by QuindeFee</etsi:Description><etsi:MimeType>text/xml</etsi:MimeType></etsi:DataObjectFormat></etsi:SignedDataObjectProperties></etsi:SignedProperties></etsi:QualifyingProperties></ds:Object></ds:Signature></factura>
