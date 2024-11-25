@@ -11,8 +11,8 @@ from jinja2 import Template
 import re
 
 # Configura tu acceso a Smartsheet
-ACCESS_TOKEN = 'Jg2fmXeRVSlecIiTohGY2UAJr4YKycUs7cEfX'
-SHEET_ID = '2152478669754244'
+ACCESS_TOKEN = 'xxx'
+SHEET_ID = 'xxx'
 
 ss_client = smartsheet.Smartsheet(ACCESS_TOKEN)
 sheet = ss_client.Sheets.get_sheet(SHEET_ID)

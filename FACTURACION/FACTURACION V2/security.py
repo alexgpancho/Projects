@@ -7,9 +7,9 @@ from datetime import datetime
 from cryptography.fernet import Fernet
 
 # Conexión a Smartsheet
-ACCESS_TOKEN = 'Jg2fmXeRVSlecIiTohGY2UAJr4YKycUs7cEfX'
-SHEET_ID = '5787690771369860'
-ROW_ID = 5883626061401988
+ACCESS_TOKEN = 'xxx'
+SHEET_ID = 'xxx'
+ROW_ID = xxx
 PICKLE_FILE = 'appkey.pkl'
 CLAVE_CIF = b'ZLqGI4S4zc_qOYzozyf3WV9Mo4lINSe0PZUSjoKMRS0='
 
